@@ -79,7 +79,7 @@ class App {
                 </div>
                 <div class="mb-3">
                     <label for="bookYear" class="form-label">Рік</label>
-                    <input type="number" min="0" max="2024" class="form-control" id="bookYear">
+                    <input type="number" class="form-control" id="bookYear">
                     <span id="yearWarning" style="display: none; font-size: 12px; color: red;">Це поле є обов'язковим</span>
                 </div>
                 <button type="submit" class="btn btn-primary">Додати Книжку</button>
@@ -166,7 +166,7 @@ class App {
                     );
                     this.libraryService.addBook(newBook);
                     this.initializeApp();
-                } else if (!isValid) {
+                } else if (!isValid || !Validation.validateBookInput(titleInput.value, authorInput.value, year)) {
                     titleWarning.style.display = 'inline';
                     authorWarning.style.display = 'inline';
                     yearWarning.style.display = 'inline';
@@ -291,12 +291,34 @@ class App {
         Array.from(borrowButtons).forEach(el => el.addEventListener('click', (e) => {
             e.stopPropagation();
             if(el.innerHTML.replace(/\s/g, '') == 'Доступно') {
-                this.showPopup(this.storage.getBookById(+el.parentElement.getAttribute('bookid')) as Book);
+                this.showForm(this.storage.getBookById(+el.parentElement.getAttribute('bookid')) as Book);
                 console.log("borrow operation");
             }
         }))
     }
-    private showPopup(book : Book) {
+    private createPopup(content: string) {
+        const popup = document.createElement('div');
+        popup.innerHTML = `
+            <div class="overlay"></div>
+            <div class="popup border rounded">
+                <div class="mb-3">
+                    <h34>${content}</h34>
+                </div>
+                <button id="close-popup" class="btn btn-secondary">Закрити</button>
+            </div>
+        `
+        document.body.appendChild(popup);
+
+        const closeButton = document.getElementById('close-popup');
+        if (closeButton) {
+            closeButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.body.removeChild(popup);
+                this.initializeApp();
+            });
+        }
+    }
+    private showForm(book : Book) {
         const popup = document.createElement('div');
         popup.innerHTML = `
             <div class="overlay"></div>
@@ -320,41 +342,18 @@ class App {
                 const user = this.storage.getUserById(+id) as User;
                 if(user) {
                     if(user.borrowedBooks.length >= 3) {
-                        //alert("Користувач не може позичити більше 3 книг.");
-                        popup.innerHTML = `
-                            <div class="overlay"></div>
-                            <form class="popup border rounded ">
-                                <div class="mb-3">
-                                    <h4>Користувач не може позичити більше 3 книг.</h4>
-                                </div>
-                                <button id="close-popup" class="btn btn-secondary">Закрити</button>
-                            </form>
-                        `
+                        this.initializeApp();
+                        this.createPopup('Користувач не може позичити більше 3 книг.');
                         return;
                     }
-                    popup.innerHTML = `
-                    <div class="overlay"></div>
-                        <form class="popup border rounded ">
-                            <div class="mb-3">
-                                <h4>Книга ${book.title} була успішно позичена користувачем ${user.name}.</h4>
-                            </div>
-                            <button id="close-popup" class="btn btn-secondary">Закрити</button>
-                        </form>
-                    `
                     this.libraryService.borrowBook(user, book);
                     this.libraryService.updateUser(this.storage.getUserById(+id) as User, user);
+                    this.initializeApp();
+                    this.createPopup('Книга '+book.title+' була успішно позичена користувачем '+user.name+'.');
                 }
                 else{
-                    //alert("Користувач не знайдений.");
-                    popup.innerHTML = `
-                            <div class="overlay"></div>
-                            <form class="popup border rounded ">
-                                <div class="mb-3">
-                                    <h4>Користувач не знайдений.</h4>
-                                </div>
-                                <button id="close-popup" class="btn btn-secondary">Закрити</button>
-                            </form>
-                        `
+                    this.initializeApp();
+                    this.createPopup('Користувач не знайдений.');
                 }
             });
         }
@@ -364,7 +363,6 @@ class App {
             closeButton.addEventListener('click', (e) => {
                 e.preventDefault();
                 document.body.removeChild(popup);
-                this.initializeApp();
             });
         }
     }
