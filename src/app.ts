@@ -18,7 +18,7 @@ class App {
         this.library = new Library<Book>();
         this.libraryService = new LibraryService(this.library, this.storage);
     }
-    start() {
+    public start() {
         this.loadInitialData();
         this.initializeApp();
     }
@@ -27,7 +27,7 @@ class App {
         const savedBooks = this.storage.getBooks();
         savedBooks.forEach(book => this.library.addItem(new Book(book.id, book.title, book.author, book.year, book.available)));
     }
-    public initializeApp() {
+    private initializeApp() {
         document.body.innerHTML = `
             <div class="container mt-4 col-md-12 justify-content-center d-flex flex-column" id="app">
                 <h1 class="mb-4">Система Управління Бібліотекою</h1>
@@ -82,7 +82,7 @@ class App {
                     <input type="number" min="0" max="2024" class="form-control" id="bookYear">
                     <span id="yearWarning" style="display: none; font-size: 12px; color: red;">Це поле є обов'язковим</span>
                 </div>
-                <button type="submit" class="btn btn-primary">Додати Книгу</button>
+                <button type="submit" class="btn btn-primary">Додати Книжку</button>
             </form>
         `;
     }
